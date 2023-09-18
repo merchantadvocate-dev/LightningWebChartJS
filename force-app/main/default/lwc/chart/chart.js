@@ -105,6 +105,14 @@ export default class Chart extends LightningElement {
   }
 
   @api
+  get cutoutPercentage() {
+    return this._payload.cutoutPercentage;
+  }
+  set cutoutPercentage(v) {
+    this._payload.cutoutPercentage = v;
+  }
+
+  @api
   get maintainaspectratio() {
     return this._payload.maintainAspectRatio;
   }
