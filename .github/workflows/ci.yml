@@ -2,16 +2,26 @@
 name: CI
 
 on:
-  pull_request_target:
+  pull_request:
     branches: [master]
 
 jobs:
+  commit-lint:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout and lint commits
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: wagoid/commitlint-github-action@v4
+        continue-on-error: true
+
   code-formatting-and-linting:
     runs-on: ubuntu-latest
     steps:
       # Checkout the code in the pull request
       - name: 'Checkout source code'
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - uses: actions/cache@v2
         with:
@@ -38,14 +48,15 @@ jobs:
 
       # Install PMD
       - name: Install PMD
-        run: wget https://github.com/pmd/pmd/releases/download/pmd_releases%2F6.22.0/pmd-bin-6.22.0.zip && unzip pmd-bin-6.22.0.zip
+        run: wget https://github.com/pmd/pmd/releases/download/pmd_releases%2F6.45.0/pmd-bin-6.45.0.zip && unzip pmd-bin-6.45.0.zip
 
       # Execute PMD
       - name: Execute PMD
-        run: pmd-bin-6.22.0/bin/run.sh pmd -minimumpriority 2 -d force-app -R apex-ruleset.xml -f text -l apex
+        run: pmd-bin-6.45.0/bin/run.sh pmd --minimum-priority 2 -d force-app -R apex-ruleset.xml -f text -l apex
 
   scratch-org-test:
     runs-on: ubuntu-latest
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
     needs: code-formatting-and-linting
     steps:
       # Install Salesforce CLI
@@ -58,7 +69,7 @@ jobs:
 
       # Checkout the code in the pull request
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       # Store secret for dev hub
       - name: 'Populate auth file with DEVHUB_SFDX_URL secret'
